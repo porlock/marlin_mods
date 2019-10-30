@@ -21,6 +21,8 @@
  */
 #pragma once
 
+#include "macros.h"
+
 #define BOARD_UNKNOWN -1
 
 //
@@ -97,6 +99,7 @@
 #define BOARD_OVERLORD                1143  // Overlord/Overlord Pro
 #define BOARD_HJC2560C_REV1           1144  // ADIMLab Gantry v1
 #define BOARD_HJC2560C_REV2           1145  // ADIMLab Gantry v2
+#define BOARD_TANGO                   1146  // BIQU Tango V1
 
 //
 // RAMBo and derivatives
@@ -268,11 +271,12 @@
 #define BOARD_BIGTREE_SKR_MINI_V1_1   4010  // BigTreeTech SKR Mini v1.1 (STM32F103RC)
 #define BOARD_BIGTREE_SKR_MINI_E3     4011  // BigTreeTech SKR Mini E3 (STM32F103RC)
 #define BOARD_BIGTREE_SKR_E3_DIP      4012  // BigTreeTech SKR E3 DIP V1.0 (STM32F103RC)
-#define BOARD_JGAURORA_A5S_A1         4013  // JGAurora A5S A1 (STM32F103ZET6)
-#define BOARD_FYSETC_AIO_II           4014  // FYSETC AIO_II
-#define BOARD_FYSETC_CHEETAH          4015  // FYSETC Cheetah
-#define BOARD_FYSETC_CHEETAH_V12      4016  // FYSETC Cheetah V1.2
-#define BOARD_LONGER3D_LK             4017  // Alfawise U20/U20+/U30 (Longer3D LK1/2) / STM32F103VET6
+#define BOARD_BTT_SKR_MINI_E3_V1_2    4013  // BigTreeTech SKR Mini E3 V1.2 (STM32F103RC)
+#define BOARD_JGAURORA_A5S_A1         4014  // JGAurora A5S A1 (STM32F103ZET6)
+#define BOARD_FYSETC_AIO_II           4015  // FYSETC AIO_II
+#define BOARD_FYSETC_CHEETAH          4016  // FYSETC Cheetah
+#define BOARD_FYSETC_CHEETAH_V12      4017  // FYSETC Cheetah V1.2
+#define BOARD_LONGER3D_LK             4018  // Alfawise U20/U20+/U30 (Longer3D LK1/2) / STM32F103VET6
 
 //
 // ARM Cortex-M4F
@@ -286,7 +290,7 @@
 //
 
 #define BOARD_BEAST                   4200  // STM32F4xxVxT6 Libmaple-based STM32F4 controller
-#define BOARD_STM32F4                 4201  // STM32 STM32GENERIC-based STM32F4 controller
+#define BOARD_GENERIC_STM32F4         4201  // STM32 STM32GENERIC-based STM32F4 controller
 #define BOARD_ARMED                   4202  // Arm'ed STM32F4-based controller
 #define BOARD_RUMBA32                 4203  // RUMBA32 STM32F4-based controller
 #define BOARD_BLACK_STM32F407VE       4204  // BLACK_STM32F407VE
@@ -307,7 +311,7 @@
 //
 // Espressif ESP32 WiFi
 //
-#define BOARD_ESP32                   6000
+#define BOARD_ESPRESSIF_ESP32         6000
 
 //
 // Simulations
@@ -315,4 +319,7 @@
 
 #define BOARD_LINUX_RAMPS             9999
 
-#define MB(board) (defined(BOARD_##board) && MOTHERBOARD==BOARD_##board)
+#define _MB_1(B)  (defined(BOARD_##B) && MOTHERBOARD==BOARD_##B)
+#define MB(V...)  DO(MB,||,V)
+
+#define IS_MELZI MB(MELZI, MELZI_CREALITY, MELZI_MAKR3D, MELZI_MALYAN, MELZI_TRONXY)

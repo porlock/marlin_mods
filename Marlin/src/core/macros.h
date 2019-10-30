@@ -21,7 +21,6 @@
  */
 #pragma once
 
-#define NUM_AXIS 4
 #define ABCE 4
 #define XYZE 4
 #define ABC  3
@@ -227,6 +226,9 @@
 #define LIST_N(N,V...) _LIST_N(N,V)
 #define ARRAY_N(N,V...) { _LIST_N(N,V) }
 
+#define _JOIN_1(O)         (O)
+#define JOIN_N(N,C,V...)   (DO(JOIN,C,LIST_N(N,V)))
+
 // Macros for adding
 #define INC_0 1
 #define INC_1 2
@@ -277,7 +279,7 @@
 #define ATAN2(y, x) atan2f(y, x)
 #define POW(x, y)   powf(x, y)
 #define SQRT(x)     sqrtf(x)
-#define RSQRT(x)    (1 / sqrtf(x))
+#define RSQRT(x)    (1.0f / sqrtf(x))
 #define CEIL(x)     ceilf(x)
 #define FLOOR(x)    floorf(x)
 #define LROUND(x)   lroundf(x)

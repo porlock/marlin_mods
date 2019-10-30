@@ -228,7 +228,7 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
 #if PIN_EXISTS(POWER_LOSS)
   void PrintJobRecovery::_outage() {
     save(true);
-    kill(PSTR(MSG_OUTAGE_RECOVERY));
+    kill(GET_TEXT(MSG_OUTAGE_RECOVERY));
   }
 #endif
 
@@ -327,9 +327,10 @@ void PrintJobRecovery::resume() {
   // Restore retract and hop state
   #if ENABLED(FWRETRACT)
     for (uint8_t e = 0; e < EXTRUDERS; e++) {
-      if (info.retract[e] != 0.0)
+      if (info.retract[e] != 0.0) {
         fwretract.current_retract[e] = info.retract[e];
         fwretract.retracted[e] = true;
+      }
     }
     fwretract.current_hop = info.retract_hop;
   #endif

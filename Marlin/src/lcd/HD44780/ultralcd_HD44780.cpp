@@ -484,9 +484,9 @@ void MarlinUI::draw_kill_screen() {
   lcd_put_u8str(0, 0, status_message);
   lcd_uint_t y = 2;
   #if LCD_HEIGHT >= 4
-    lcd_put_u8str_P(0, y++, PSTR(MSG_HALTED));
+    lcd_put_u8str_P(0, y++, GET_TEXT(MSG_HALTED));
   #endif
-  lcd_put_u8str_P(0, y, PSTR(MSG_PLEASE_RESET));
+  lcd_put_u8str_P(0, y, GET_TEXT(MSG_PLEASE_RESET));
 }
 
 //
@@ -566,7 +566,7 @@ FORCE_INLINE void _draw_bed_status(const bool blink) {
 #if HAS_PRINT_PROGRESS
 
   FORCE_INLINE void _draw_print_progress() {
-    const uint8_t progress = ui.get_progress();
+    const uint8_t progress = ui.get_progress_percent();
     lcd_put_u8str_P(PSTR(
       #if ENABLED(SDSUPPORT)
         "SD"
@@ -613,7 +613,7 @@ void MarlinUI::draw_status_message(const bool blink) {
     // Draw the progress bar if the message has shown long enough
     // or if there is no message set.
     if (ELAPSED(millis(), progress_bar_ms + PROGRESS_BAR_MSG_TIME) || !has_status()) {
-      const uint8_t progress = get_progress();
+      const uint8_t progress = get_progress_percent();
       if (progress > 2) return draw_progress_bar(progress);
     }
 
@@ -815,14 +815,28 @@ void MarlinUI::draw_status_screen() {
             sprintf_P(mixer_messages, PSTR("%s %d;%d%% "), mix_label, int(mixer.mix[0]), int(mixer.mix[1]));
             lcd_put_u8str(mixer_messages);
 
-          #else
+          #else // !DUAL_MIXING_EXTRUDER
 
-            xy_pos_t lpos = current_position; toLogical(lpos);
-            _draw_axis_value(X_AXIS, ftostr4sign(lpos.x), blink);
-            lcd_put_wchar(' ');
-            _draw_axis_value(Y_AXIS, ftostr4sign(lpos.y), blink);
+            if (true
+              #if ENABLED(LCD_SHOW_E_TOTAL)
+                && !printingIsActive()
+              #endif
+            ) {
+              xy_pos_t lpos = current_position; toLogical(lpos);
+              _draw_axis_value(X_AXIS, ftostr4sign(lpos.x), blink);
+              lcd_put_wchar(' ');
+              _draw_axis_value(Y_AXIS, ftostr4sign(lpos.y), blink);
+            }
+            else {
+              #if ENABLED(LCD_SHOW_E_TOTAL)
+                char tmp[20];
+                const uint8_t escale = e_move_accumulator >= 100000.0f ? 10 : 1; // After 100m switch to cm
+                sprintf_P(tmp, PSTR("E %ld%cm       "), uint32_t(_MAX(e_move_accumulator, 0.0f)) / escale, escale == 10 ? 'c' : 'm'); // 1234567mm
+                lcd_put_u8str(tmp);
+              #endif
+            }
 
-          #endif
+          #endif // !DUAL_MIXING_EXTRUDER
 
         #endif // HOTENDS <= 2 && (HOTENDS <= 1 || !HAS_HEATED_BED)
 
@@ -861,7 +875,7 @@ void MarlinUI::draw_status_screen() {
           uint16_t per;
           #if HAS_FAN0
             if (true
-              #if EXTRUDERS
+              #if EXTRUDERS && ENABLED(ADAPTIVE_FAN_SLOWING)
                 && (blink || thermalManager.fan_speed_scaler[0] < 128)
               #endif
             ) {
@@ -977,7 +991,7 @@ void MarlinUI::draw_status_screen() {
 
   #endif // ADVANCED_PAUSE_FEATURE
 
-  void draw_menu_item_static(const uint8_t row, PGM_P const pstr, const uint8_t style/*=SS_CENTER*/, const char * const valstr/*=nullptr*/) {
+  void draw_menu_item_static(const uint8_t row, PGM_P const pstr, const uint8_t style/*=SS_DEFAULT*/, const char * const valstr/*=nullptr*/) {
     int8_t n = LCD_WIDTH;
     lcd_moveto(0, row);
     if ((style & SS_CENTER) && !valstr) {
