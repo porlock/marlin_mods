@@ -38,12 +38,11 @@
 //
 #define DISABLE_DEBUG
 
-// Testing
-#define SDA_PIN            PB7
-#define SCL_PIN            PB6
-//#define I2C_EEPROM
-//#undef E2END
-//#define E2END 0x7FF // AT24C16N
+// Testing - not working yet
+#define SPI_FLASH_EEPROM_EMULATION
+#define SPI_FLASH_EEPROM_OFFSET 0x700000
+#define SPI_FLASH_DEVICE 2
+#define SPI_FLASH_CS_PIN PB12
 
 //
 // Note: MKS Robin board is using SPI2 interface.
@@ -89,7 +88,7 @@
 // Temperature Sensors
 //
 #define TEMP_0_PIN            PC1   // TH1
-#define TEMP_CHAMBER_PIN      PC2   // TH2
+#define TEMP_CHAMBER_PIN      PC2   // TH2 reused as chamber temp sensor
 
 //#define TEMP_1_PIN          PC2   // TH2
 
@@ -99,7 +98,7 @@
 // Heaters / Fans
 //
 #define HEATER_0_PIN       PC3   // HEATER1
-//#define HEATER_1_PIN       PB0   // HEATER2
+//#define HEATER_1_PIN       PB0   // HEATER2 reused as fan pin
 #define HEATER_BED_PIN     PA0   // HOT BED
 
 #define FAN_PIN            PB1   // FAN
