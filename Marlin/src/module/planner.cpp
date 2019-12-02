@@ -1285,9 +1285,9 @@ void Planner::check_axes_activity() {
     #endif
 
     #if FAN_MIN_PWM != 0 || FAN_MAX_PWM != 255
-      #define CALC_FAN_SPEED(f) (tail_fan_speed[f] ? map(tail_fan_speed[f], 1, 255, FAN_MIN_PWM, FAN_MAX_PWM) : 0)
+      #define CALC_FAN_SPEED(f) (tail_fan_speed[f] ? map(tail_fan_speed[f], 1, 255, FAN_MIN_PWM, FAN_MAX_PWM) : FAN_OFF_PWM)
     #else
-      #define CALC_FAN_SPEED(f) tail_fan_speed[f]
+      #define CALC_FAN_SPEED(f) (tail_fan_speed[f] ?: FAN_OFF_PWM)
     #endif
 
     #if ENABLED(FAN_SOFT_PWM)
@@ -1808,6 +1808,8 @@ bool Planner::_populate_block(block_t * const block, bool split_move,
 
   #if EXTRUDERS
     delta_mm.e = esteps_float * steps_to_mm[E_AXIS_N(extruder)];
+  #else
+    delta_mm.e = 0.0f;
   #endif
 
   #if ENABLED(LCD_SHOW_E_TOTAL)
@@ -1924,121 +1926,32 @@ bool Planner::_populate_block(block_t * const block, bool split_move,
 
       #if ENABLED(DISABLE_INACTIVE_EXTRUDER) // Enable only the selected extruder
 
-        #define DISABLE_IDLE_E(N) if (!g_uc_extruder_last_move[N]) disable_E##N();
-
         for (uint8_t i = 0; i < EXTRUDERS; i++)
           if (g_uc_extruder_last_move[i] > 0) g_uc_extruder_last_move[i]--;
 
-        switch (extruder) {
-          case 0:
-            #if EXTRUDERS > 1
-              DISABLE_IDLE_E(1);
-              #if EXTRUDERS > 2
-                DISABLE_IDLE_E(2);
-                #if EXTRUDERS > 3
-                  DISABLE_IDLE_E(3);
-                  #if EXTRUDERS > 4
-                    DISABLE_IDLE_E(4);
-                    #if EXTRUDERS > 5
-                      DISABLE_IDLE_E(5);
-                    #endif // EXTRUDERS > 5
-                  #endif // EXTRUDERS > 4
-                #endif // EXTRUDERS > 3
-              #endif // EXTRUDERS > 2
-            #endif // EXTRUDERS > 1
-            enable_E0();
-            g_uc_extruder_last_move[0] = (BLOCK_BUFFER_SIZE) * 2;
-            #if HAS_DUPLICATION_MODE
-              if (extruder_duplication_enabled) {
-                enable_E1();
-                g_uc_extruder_last_move[1] = (BLOCK_BUFFER_SIZE) * 2;
-              }
-            #endif
-          break;
-          #if EXTRUDERS > 1
-            case 1:
-              DISABLE_IDLE_E(0);
-              #if EXTRUDERS > 2
-                DISABLE_IDLE_E(2);
-                #if EXTRUDERS > 3
-                  DISABLE_IDLE_E(3);
-                  #if EXTRUDERS > 4
-                    DISABLE_IDLE_E(4);
-                    #if EXTRUDERS > 5
-                      DISABLE_IDLE_E(5);
-                    #endif // EXTRUDERS > 5
-                  #endif // EXTRUDERS > 4
-                #endif // EXTRUDERS > 3
-              #endif // EXTRUDERS > 2
-              enable_E1();
-              g_uc_extruder_last_move[1] = (BLOCK_BUFFER_SIZE) * 2;
-            break;
-            #if EXTRUDERS > 2
-              case 2:
-                DISABLE_IDLE_E(0);
-                DISABLE_IDLE_E(1);
-                #if EXTRUDERS > 3
-                  DISABLE_IDLE_E(3);
-                  #if EXTRUDERS > 4
-                    DISABLE_IDLE_E(4);
-                    #if EXTRUDERS > 5
-                      DISABLE_IDLE_E(5);
-                    #endif
-                  #endif
-                #endif
-                enable_E2();
-                g_uc_extruder_last_move[2] = (BLOCK_BUFFER_SIZE) * 2;
-              break;
-              #if EXTRUDERS > 3
-                case 3:
-                  DISABLE_IDLE_E(0);
-                  DISABLE_IDLE_E(1);
-                  DISABLE_IDLE_E(2);
-                  #if EXTRUDERS > 4
-                    DISABLE_IDLE_E(4);
-                    #if EXTRUDERS > 5
-                      DISABLE_IDLE_E(5);
-                    #endif
-                  #endif
-                  enable_E3();
-                  g_uc_extruder_last_move[3] = (BLOCK_BUFFER_SIZE) * 2;
-                break;
-                #if EXTRUDERS > 4
-                  case 4:
-                    DISABLE_IDLE_E(0);
-                    DISABLE_IDLE_E(1);
-                    DISABLE_IDLE_E(2);
-                    DISABLE_IDLE_E(3);
-                    #if EXTRUDERS > 5
-                      DISABLE_IDLE_E(5);
-                    #endif
-                    enable_E4();
-                    g_uc_extruder_last_move[4] = (BLOCK_BUFFER_SIZE) * 2;
-                  break;
-                  #if EXTRUDERS > 5
-                    case 5:
-                      DISABLE_IDLE_E(0);
-                      DISABLE_IDLE_E(1);
-                      DISABLE_IDLE_E(2);
-                      DISABLE_IDLE_E(3);
-                      DISABLE_IDLE_E(4);
-                      enable_E5();
-                      g_uc_extruder_last_move[5] = (BLOCK_BUFFER_SIZE) * 2;
-                    break;
-                  #endif // EXTRUDERS > 5
-                #endif // EXTRUDERS > 4
-              #endif // EXTRUDERS > 3
-            #endif // EXTRUDERS > 2
-          #endif // EXTRUDERS > 1
-        }
+        #if HAS_DUPLICATION_MODE
+          if (extruder_duplication_enabled && extruder == 0) {
+            enable_E1();
+            g_uc_extruder_last_move[1] = (BLOCK_BUFFER_SIZE) * 2;
+          }
+        #endif
+
+        #define ENABLE_ONE_E(N) do{ \
+          if (extruder == N) { \
+            enable_E##N(); \
+            g_uc_extruder_last_move[N] = (BLOCK_BUFFER_SIZE) * 2; \
+          } \
+          else if (!g_uc_extruder_last_move[N]) \
+            disable_E##N(); \
+        }while(0);
+
       #else
-        enable_E0();
-        enable_E1();
-        enable_E2();
-        enable_E3();
-        enable_E4();
-        enable_E5();
+
+        #define ENABLE_ONE_E(N) enable_E##N();
+
       #endif
+
+      REPEAT(EXTRUDERS, ENABLE_ONE_E);
     }
   #endif // EXTRUDERS
 
@@ -2086,7 +1999,7 @@ bool Planner::_populate_block(block_t * const block, bool split_move,
     if (was_enabled) ENABLE_STEPPER_DRIVER_INTERRUPT();
   #endif
 
-  block->nominal_speed_sqr = sq(block->millimeters * inverse_secs);   //   (mm/sec)^2 Always > 0
+  block->nominal_speed_sqr = sq(block->millimeters * inverse_secs);   // (mm/sec)^2 Always > 0
   block->nominal_rate = CEIL(block->step_event_count * inverse_secs); // (step/sec) Always > 0
 
   #if ENABLED(FILAMENT_WIDTH_SENSOR)
@@ -2094,27 +2007,37 @@ bool Planner::_populate_block(block_t * const block, bool split_move,
       filwidth.advance_e(delta_mm.e);
   #endif
 
-  // Calculate and limit speed in mm/sec for each axis
+  // Calculate and limit speed in mm/sec
+
   xyze_float_t current_speed;
   float speed_factor = 1.0f; // factor <1 decreases speed
-  LOOP_XYZE(i) {
-    #if BOTH(MIXING_EXTRUDER, RETRACT_SYNC_MIXING)
-      // In worst case, only one extruder running, no change is needed.
-      // In best case, all extruders run the same amount, we can divide by MIXING_STEPPERS
-      float delta_mm_i = 0;
-      if (i == E_AXIS && mixer.get_current_vtool() == MIXER_AUTORETRACT_TOOL)
-        delta_mm_i = delta_mm.e / MIXING_STEPPERS;
-      else
-        delta_mm_i = delta_mm.e;
-    #else
-      const float delta_mm_i = delta_mm[i];
-    #endif
-    const feedRate_t cs = ABS(current_speed[i] = delta_mm_i * inverse_secs);
-    #if ENABLED(DISTINCT_E_FACTORS)
-      if (i == E_AXIS) i += extruder;
-    #endif
-    if (cs > settings.max_feedrate_mm_s[i]) NOMORE(speed_factor, settings.max_feedrate_mm_s[i] / cs);
+
+  // Linear axes first with less logic
+  LOOP_XYZ(i) {
+    current_speed[i] = delta_mm[i] * inverse_secs;
+    const feedRate_t cs = ABS(current_speed[i]),
+                 max_fr = settings.max_feedrate_mm_s[i];
+    if (cs > max_fr) NOMORE(speed_factor, max_fr / cs);
   }
+
+  // Limit speed on extruders, if any
+  #if EXTRUDERS
+    {
+      current_speed.e = delta_mm.e * inverse_secs;
+      #if BOTH(MIXING_EXTRUDER, RETRACT_SYNC_MIXING)
+        // Move all mixing extruders at the specified rate
+        if (mixer.get_current_vtool() == MIXER_AUTORETRACT_TOOL)
+          current_speed.e *= MIXING_STEPPERS;
+      #endif
+      const feedRate_t cs = ABS(current_speed.e),
+                   max_fr = (settings.max_feedrate_mm_s[E_AXIS_N(extruder)]
+                              #if BOTH(MIXING_EXTRUDER, RETRACT_SYNC_MIXING)
+                                * MIXING_STEPPERS
+                              #endif
+                            );
+      if (cs > max_fr) NOMORE(speed_factor, max_fr / cs);
+    }
+  #endif
 
   // Max segment time in µs.
   #ifdef XY_FREQUENCY_LIMIT

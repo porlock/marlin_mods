@@ -55,15 +55,23 @@ typedef enum : int8_t {
 // PID storage
 typedef struct { float Kp, Ki, Kd;     } PID_t;
 typedef struct { float Kp, Ki, Kd, Kc; } PIDC_t;
-#if ENABLED(PID_EXTRUSION_SCALING)
-  typedef PIDC_t hotend_pid_t;
-  #if LPQ_MAX_LEN > 255
-    typedef uint16_t lpq_ptr_t;
+typedef struct { float Kp, Ki, Kd, Kf; } PIDF_t;
+typedef struct { float Kp, Ki, Kd, Kc, Kf; } PIDCF_t;
+
+typedef
+  #if BOTH(PID_EXTRUSION_SCALING, PID_FAN_SCALING)
+    PIDCF_t
+  #elif ENABLED(PID_EXTRUSION_SCALING)
+    PIDC_t
+  #elif ENABLED(PID_FAN_SCALING)
+    PIDF_t
   #else
-    typedef uint8_t lpq_ptr_t;
+    PID_t
   #endif
-#else
-  typedef PID_t hotend_pid_t;
+hotend_pid_t;
+
+#if ENABLED(PID_EXTRUSION_SCALING)
+  typedef IF<(LPQ_MAX_LEN > 255), uint16_t, uint8_t>::type lpq_ptr_t;
 #endif
 
 #define DUMMY_PID_VALUE 3000.0f
@@ -76,6 +84,12 @@ typedef struct { float Kp, Ki, Kd, Kc; } PIDC_t;
     #define _PID_Kc(H) Temperature::temp_hotend[H].pid.Kc
   #else
     #define _PID_Kc(H) 1
+  #endif
+
+  #if ENABLED(PID_FAN_SCALING)
+    #define _PID_Kf(H) Temperature::temp_hotend[H].pid.Kf
+  #else
+    #define _PID_Kf(H) 0
   #endif
 #else
   #define _PID_Kp(H) DUMMY_PID_VALUE
@@ -217,9 +231,8 @@ typedef struct { int16_t raw_min, raw_max; } raw_range_t;
 typedef struct { int16_t mintemp, maxtemp; } celsius_range_t;
 typedef struct { int16_t raw_min, raw_max, mintemp, maxtemp; } temp_range_t;
 
-#define THERMISTOR_ADC_RESOLUTION       1024           // 10-bit ADC .. shame to waste 12-bits of resolution on 32-bit
-#define THERMISTOR_ABS_ZERO_C           -273.15f       // bbbbrrrrr cold !
-#define THERMISTOR_RESISTANCE_NOMINAL_C 25.0f          // mmmmm comfortable
+#define THERMISTOR_ABS_ZERO_C           -273.15f  // bbbbrrrrr cold !
+#define THERMISTOR_RESISTANCE_NOMINAL_C 25.0f     // mmmmm comfortable
 
 #if HAS_USER_THERMISTORS
 
@@ -267,8 +280,6 @@ typedef struct { int16_t raw_min, raw_max, mintemp, maxtemp; } temp_range_t;
 class Temperature {
 
   public:
-
-    static volatile bool in_temp_isr;
 
     #if HOTENDS
       #if ENABLED(TEMP_SENSOR_1_AS_REDUNDANT)
@@ -479,6 +490,7 @@ class Temperature {
       #endif
 
       static inline uint8_t scaledFanSpeed(const uint8_t target, const uint8_t fs) {
+        UNUSED(target); // Potentially unused!
         return (fs * uint16_t(
           #if ENABLED(ADAPTIVE_FAN_SLOWING)
             fan_speed_scaler[target]
@@ -513,7 +525,7 @@ class Temperature {
      * Called from the Temperature ISR
      */
     static void readings_ready();
-    static void isr();
+    static void tick();
 
     /**
      * Call periodically to manage heaters

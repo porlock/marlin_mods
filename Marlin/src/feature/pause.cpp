@@ -191,7 +191,7 @@ bool load_filament(const float &slow_load_length/*=0*/, const float &fast_load_l
       host_action_prompt_begin(PSTR("Load Filament T"), false);
       SERIAL_CHAR(tool);
       SERIAL_EOL();
-      host_action_prompt_button(PSTR("Continue"));
+      host_action_prompt_button(CONTINUE_STR);
       host_action_prompt_show();
     #endif
     #if ENABLED(EXTENSIBLE_UI)
@@ -247,7 +247,7 @@ bool load_filament(const float &slow_load_length/*=0*/, const float &fast_load_l
 
     wait_for_user = true;
     #if ENABLED(HOST_PROMPT_SUPPORT)
-      host_prompt_do(PROMPT_USER_CONTINUE, PSTR("Filament Purge Running..."), PSTR("Continue"));
+      host_prompt_do(PROMPT_USER_CONTINUE, PSTR("Filament Purge Running..."), CONTINUE_STR);
     #endif
     #if ENABLED(EXTENSIBLE_UI)
       ExtUI::onUserConfirmRequired_P(PSTR("Filament Purge Running..."));
@@ -283,7 +283,7 @@ bool load_filament(const float &slow_load_length/*=0*/, const float &fast_load_l
           host_action_prompt_button(PSTR("DisableRunout"));
         else {
           host_prompt_reason = PROMPT_FILAMENT_RUNOUT;
-          host_action_prompt_button(PSTR("Continue"));
+          host_action_prompt_button(CONTINUE_STR);
         }
         host_action_prompt_show();
       #endif
@@ -464,7 +464,7 @@ bool pause_print(const float &retract, const xyz_pos_t &park_point, const float 
   #endif
 
   if (unload_length)   // Unload the filament
-    unload_filament(unload_length, show_lcd);
+    unload_filament(unload_length, show_lcd, PAUSE_MODE_CHANGE_FILAMENT);
 
   #if ENABLED(DUAL_X_CARRIAGE)
     active_extruder = saved_ext;
@@ -523,7 +523,7 @@ void wait_for_confirmation(const bool is_reload/*=false*/, const int8_t max_beep
   KEEPALIVE_STATE(PAUSED_FOR_USER);
   wait_for_user = true;    // LCD click or M108 will clear this
   #if ENABLED(HOST_PROMPT_SUPPORT)
-    host_prompt_do(PROMPT_USER_CONTINUE, PSTR("Nozzle Parked"), PSTR("Continue"));
+    host_prompt_do(PROMPT_USER_CONTINUE, PSTR("Nozzle Parked"), CONTINUE_STR);
   #endif
   #if ENABLED(EXTENSIBLE_UI)
     ExtUI::onUserConfirmRequired_P(PSTR("Nozzle Parked"));
@@ -577,7 +577,7 @@ void wait_for_confirmation(const bool is_reload/*=false*/, const int8_t max_beep
 
       HOTEND_LOOP() thermalManager.hotend_idle[e].start(nozzle_timeout);
       #if ENABLED(HOST_PROMPT_SUPPORT)
-        host_prompt_do(PROMPT_USER_CONTINUE, PSTR("Reheat Done"), PSTR("Continue"));
+        host_prompt_do(PROMPT_USER_CONTINUE, PSTR("Reheat Done"), CONTINUE_STR);
       #endif
       #if ENABLED(EXTENSIBLE_UI)
         ExtUI::onUserConfirmRequired_P(PSTR("Reheat finished."));
@@ -637,7 +637,7 @@ void resume_print(const float &slow_load_length/*=0*/, const float &fast_load_le
   }
 
   if (nozzle_timed_out || thermalManager.hotEnoughToExtrude(active_extruder)) // Load the new filament
-    load_filament(slow_load_length, fast_load_length, purge_length, max_beep_count, true, nozzle_timed_out, PAUSE_MODE_PAUSE_PRINT DXC_PASS);
+    load_filament(slow_load_length, fast_load_length, purge_length, max_beep_count, true, nozzle_timed_out, PAUSE_MODE_SAME DXC_PASS);
 
   #if HAS_LCD_MENU
     lcd_pause_show_message(PAUSE_MESSAGE_RESUME);
