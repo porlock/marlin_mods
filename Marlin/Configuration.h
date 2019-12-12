@@ -2116,10 +2116,10 @@
   //
 
   #define TFT_MARLINUI_COLOR COLOR_WHITE // main foreground color
-  #define TFT_MARLINBG_COLOR COLOR_NAVY // background color
-  #define TFT_BTCANCEL_COLOR 0xA9A6 // cancel button
+  #define TFT_MARLINBG_COLOR COLOR_BLACK // background color
+  #define TFT_BTCANCEL_COLOR COLOR_RED // cancel button
   #define TFT_BTARROWS_COLOR COLOR_WHITE // arrows up/down
-  #define TFT_BTOKMENU_COLOR COLOR_WHITE // enter button
+  #define TFT_BTOKMENU_COLOR COLOR_LIME // enter button
   //#define TFT_DISABLED_COLOR COLOR_DARK // currently not used
 
 #endif

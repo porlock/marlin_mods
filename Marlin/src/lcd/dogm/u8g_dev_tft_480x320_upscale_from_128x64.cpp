@@ -614,16 +614,16 @@ static void clearScreenSequence(u8g_t *u8g, u8g_dev_t *dev) {
 static void drawButtonSequence(u8g_t *u8g, u8g_dev_t *dev) {
   #if ENABLED(TOUCH_BUTTONS)        
     u8g_WriteEscSeqP(u8g, dev, buttonD_sequence);
-    drawImage(buttonD, u8g, dev, 32, 20, ui_color);
+    drawImage(buttonD, u8g, dev, 32, 20, TFT_BTCANCEL_COLOR);
 
     u8g_WriteEscSeqP(u8g, dev, buttonA_sequence);
-    drawImage(buttonA, u8g, dev, 32, 20, ui_color);
+    drawImage(buttonA, u8g, dev, 32, 20, TFT_BTARROWS_COLOR);
 
     u8g_WriteEscSeqP(u8g, dev, buttonB_sequence);
-    drawImage(buttonB, u8g, dev, 32, 20, ui_color);
+    drawImage(buttonB, u8g, dev, 32, 20, TFT_BTARROWS_COLOR);
 
     u8g_WriteEscSeqP(u8g, dev, buttonC_sequence);
-    drawImage(buttonC, u8g, dev, 32, 20, ui_color);
+    drawImage(buttonC, u8g, dev, 32, 20, TFT_BTOKMENU_COLOR);
   #endif // TOUCH_BUTTONS
 }
 
