@@ -222,6 +222,7 @@
   #if (FSMC_UPSCALE == 3)
     extern uint16_t ui_color;
     extern uint16_t bg_color;
+    extern void switchColor(uint16_t uiColor, uint16_t bgColor);
     extern void switchColorPreset(uint8_t preset);
   #endif
 #endif

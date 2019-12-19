@@ -154,3 +154,20 @@
     #define TOUCH_MISO_PIN PB14
   #endif
 #endif
+
+
+namespace UserData
+{
+    struct Container
+    {
+        uint16_t ui_fg_color;
+        uint16_t ui_bg_color;
+    };
+
+    void onLoadSettings(const Container& data);
+    void onStoreSettings(Container& data);
+}
+
+
+#define EEPROM_USER_DATA
+#define EEPROM_USER_DATA_SIZE sizeof(EepromUserData)

@@ -338,6 +338,13 @@ typedef struct SettingsDataStruct {
     uint8_t extui_data[ExtUI::eeprom_data_size];
   #endif
 
+  //
+  // EEPROM_USER_DATA
+  //
+  #if ENABLED(EEPROM_USER_DATA)
+    UserData::Container user_data;
+  #endif
+
 } SettingsData;
 
 //static_assert(sizeof(SettingsData) <= E2END + 1, "EEPROM too small to contain SettingsData!");
@@ -1238,6 +1245,15 @@ void MarlinSettings::postprocess() {
       }
     #endif
 
+    #if ENABLED(EEPROM_USER_DATA)
+      {
+        UserData::Container user_data;
+        UserData::onStoreSettings(user_data);
+        _FIELD_TEST(user_data);
+        EEPROM_WRITE(user_data);
+      }
+    #endif
+
     //
     // Validate CRC and Data Size
     //
@@ -2041,6 +2057,15 @@ void MarlinSettings::postprocess() {
           _FIELD_TEST(extui_data);
           EEPROM_READ(extui_data);
           if (!validating) ExtUI::onLoadSettings(extui_data);
+        }
+      #endif
+
+      #if ENABLED(EEPROM_USER_DATA)
+        {
+          UserData::Container user_data;
+          _FIELD_TEST(user_data);
+          EEPROM_READ(user_data);
+          if (!validating) UserData::onLoadSettings(user_data);
         }
       #endif
 

@@ -45,17 +45,17 @@ void GcodeSuite::M250() {
   #if TFT_HAS_COLOR
     if (parser.seen('B'))
     {
-      bg_color = parser.value_ushort();
+      switchColor(ui_color, parser.value_ushort());
       SERIAL_ECHOLNPAIR("TFT Background Color: ", bg_color);
     }
 
     if (parser.seen('F'))
     {
-      ui_color = parser.value_ushort();
+      switchColor(parser.value_ushort(), bg_color);
       SERIAL_ECHOLNPAIR("TFT Foreground Color: ", ui_color);
     }
 
-        if (parser.seen('P'))
+    if (parser.seen('P'))
     {
       switchColorPreset(parser.value_byte());
       SERIAL_ECHOLN("Switched Color Preset: ");

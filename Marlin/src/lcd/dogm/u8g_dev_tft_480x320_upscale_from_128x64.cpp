@@ -506,20 +506,25 @@ static const uint8_t ili9341_init_sequence[] = { // 0x9341 - ILI9341
   //@ ToDo 
   // *check for button sizes and how to upscale to fit on screen
   // *check if other parts of marlin use drawImage
-
-  static void switchColor(uint16_t uiColor, uint16_t bgColor) {
-    ui_color = uiColor;
-    bg_color = bgColor;
-  }
-
-    static void clearScreen() {
+  static void clearScreen()
+  {
     reqClearScreen = true;
   }
 
-  static void drawButtons() {
+  static void drawButtons()
+  {
     reqDrawButtons = true;
   }
-  
+
+  void switchColor(uint16_t uiColor, uint16_t bgColor)
+  {
+    ui_color = uiColor;
+    bg_color = bgColor;
+
+    drawButtons();
+    clearScreen();
+  }
+ 
   void switchColorPreset(uint8_t colorPreset) {
     switch (colorPreset)
     {
@@ -529,8 +534,6 @@ static const uint8_t ili9341_init_sequence[] = { // 0x9341 - ILI9341
       case 4: switchColor(TFT_PRESET_UI_4, TFT_PRESET_BG_4); break;
       default: switchColor(TFT_PRESET_UI_0, TFT_PRESET_BG_0); break;
     }
-    drawButtons();
-    clearScreen();
   }
 
   static void drawImage(const uint8_t *data, u8g_t *u8g, u8g_dev_t *dev, uint16_t length, uint16_t height, uint16_t color) {
